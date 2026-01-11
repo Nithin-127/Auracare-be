@@ -57,11 +57,30 @@ exports.registerDonor = async (req, res) => {
             witnessName, witnessRelation, hospitalName, doctorInCharge
         } = req.body;
 
-        const photo = req.files['photo'] ? req.files['photo'][0].filename : null;
-        const witnessPhoto = req.files['witnessPhoto'] ? req.files['witnessPhoto'][0].filename : null;
+        // Check if donor already exists
+        const existingDonor = await donorModel.findOne({ userId: req.userId });
+        if (existingDonor) {
+            return res.status(409).json({ message: "You are already registered as a donor" });
+        }
+
+        const files = req.files || {};
+        const photo = files['photo'] ? files['photo'][0].filename : null;
+        const witnessPhoto = files['witnessPhoto'] ? files['witnessPhoto'][0].filename : null;
+
+        if (!photo || !witnessPhoto) {
+            return res.status(400).json({ message: "Both profile photo and witness photo are required" });
+        }
 
         // Parse organs if it's coming as a JSON string from form-data
-        const parsedOrgans = typeof organs === 'string' ? JSON.parse(organs) : organs;
+        let parsedOrgans = organs;
+        try {
+            if (typeof organs === 'string') {
+                parsedOrgans = JSON.parse(organs);
+            }
+        } catch (e) {
+            console.error("Error parsing organs JSON:", e);
+            return res.status(400).json({ message: "Invalid organs data format" });
+        }
 
         const newDonor = new donorModel({
             userId: req.userId,
@@ -80,8 +99,14 @@ exports.registerDonor = async (req, res) => {
         let updatedUser = null;
         // Update user model profile picture if photo is provided
         if (photo) {
-            const userModel = require('../models/userModel');
-            updatedUser = await userModel.findByIdAndUpdate(req.userId, { profilePic: photo }, { new: true });
+            try {
+                const userModel = require('../models/userModel');
+                updatedUser = await userModel.findByIdAndUpdate(req.userId, { profilePic: photo, role: 'donor' }, { new: true, runValidators: true });
+            } catch (userError) {
+                console.error("User Update Error during Donor Registration:", userError);
+                // We don't fail the request here, as the donor record is already created.
+                // However, the frontend might depend on the updated user object.
+            }
         }
 
         res.status(201).json({
@@ -91,7 +116,10 @@ exports.registerDonor = async (req, res) => {
         });
     } catch (error) {
         console.error("Donor Registration Error:", error);
-        res.status(500).json({ message: "Error occurred in the server" });
+        if (error.code === 11000) {
+            return res.status(409).json({ message: "Duplicate entry found. You might already be registered." });
+        }
+        res.status(500).json({ message: `Registration failed: ${error.message}` });
     }
 };
 

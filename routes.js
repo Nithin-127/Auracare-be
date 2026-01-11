@@ -43,6 +43,8 @@ router.patch('/admin/donor/:id/status', jwtAdminMiddleware, adminController.upda
 router.patch('/admin/receiver/:id/status', jwtAdminMiddleware, adminController.updateReceiverStatus);
 router.post('/contact', adminController.saveMessage);
 router.get('/admin/messages', jwtAdminMiddleware, adminController.getAllMessages);
+router.delete('/admin/donor/:id', jwtAdminMiddleware, adminController.deleteDonor);
+router.delete('/admin/receiver/:id', jwtAdminMiddleware, adminController.deleteReceiver);
 
 // Payment Routes
 router.post('/create-checkout-session', jwtMiddleware, paymentController.createCheckoutSession);

@@ -14,6 +14,16 @@ server.use(express.json());
 server.use('/uploads', express.static('./uploads'));
 server.use(router);
 
+// Error handling middleware
+server.use((err, req, res, next) => {
+    console.error("Global Error Handler:", err);
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({
+        message: err.message || "Internal Server Error",
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+
 // port
 const Port = process.env.PORT || 3000;
 

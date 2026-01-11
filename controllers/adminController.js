@@ -63,3 +63,29 @@ exports.updateReceiverStatus = async (req, res) => {
         res.status(500).json({ message: "Error updating status" });
     }
 };
+
+exports.deleteDonor = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await donorModel.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ message: "Donor not found" });
+        }
+        res.status(200).json({ message: "Donor removed successfully", result });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing donor" });
+    }
+};
+
+exports.deleteReceiver = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await receiverModel.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ message: "Receiver not found" });
+        }
+        res.status(200).json({ message: "Receiver removed successfully", result });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing receiver" });
+    }
+};
