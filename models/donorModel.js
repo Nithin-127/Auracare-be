@@ -23,12 +23,14 @@ const donorSchema = new mongoose.Schema({
         lungs: { type: Boolean, default: false },
         pancreas: { type: Boolean, default: false },
         eyes: { type: Boolean, default: false },
+        blood: { type: Boolean, default: false },
     },
     hospitalName: { type: String, required: true },
     doctorInCharge: { type: String, required: true },
     photo: { type: String }, // Path to uploaded photo
     witnessName: { type: String, required: true },
     witnessRelation: { type: String, required: true },
+    witnessPhone: { type: String, required: true },
     witnessPhoto: { type: String }, // Path to witness photo
     status: {
         type: String,

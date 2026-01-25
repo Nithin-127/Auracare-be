@@ -1,4 +1,6 @@
 const userModel = require('../models/userModel');
+const donorModel = require('../models/donorModel');
+const receiverModel = require('../models/receiverModel');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -109,6 +111,8 @@ exports.loginUser = async (req, res) => {
 
 exports.googleLogin = async (req, res) => {
     const { token, role } = req.body;
+    console.log("Google Login Attempt - Role:", role);
+    console.log("Token received:", token ? "Yes (length: " + token.length + ")" : "No");
 
     try {
         const ticket = await client.verifyIdToken({
@@ -192,6 +196,21 @@ exports.updateProfile = async (req, res) => {
         if (profilePic) updateData.profilePic = profilePic;
 
         const updatedUser = await userModel.findByIdAndUpdate(userId, updateData, { new: true });
+
+        // Synchronize with Donor/Receiver models
+        if (fullName || profilePic) {
+            const syncData = {};
+            if (fullName) {
+                const nameParts = fullName.trim().split(' ');
+                syncData.firstName = nameParts[0];
+                syncData.lastName = nameParts.slice(1).join(' ') || '';
+            }
+            if (profilePic) syncData.photo = profilePic;
+
+            await donorModel.findOneAndUpdate({ userId }, syncData);
+            await receiverModel.findOneAndUpdate({ userId }, syncData);
+        }
+
         res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
     } catch (error) {
         console.error("Update Profile Error:", error);

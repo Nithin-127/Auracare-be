@@ -6,16 +6,16 @@ require('./dbConfig');
 
 const router = require('./routes');
 
-const server = new express();
+const app = express();
 
 // middlewares
-server.use(cors());
-server.use(express.json());
-server.use('/uploads', express.static('./uploads'));
-server.use(router);
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static('./uploads'));
+app.use(router);
 
 // Error handling middleware
-server.use((err, req, res, next) => {
+app.use((err, req, res, next) => {
     console.error("Global Error Handler:", err);
     const statusCode = err.statusCode || 500;
     res.status(statusCode).json({
@@ -27,6 +27,6 @@ server.use((err, req, res, next) => {
 // port
 const Port = process.env.PORT || 3000;
 
-server.listen(Port, () => {
+app.listen(Port, () => {
     console.log("AuraCare Server is running on", Port);
 });

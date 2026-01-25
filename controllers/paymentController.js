@@ -17,6 +17,8 @@ exports.createCheckoutSession = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        console.log(`Creating Stripe session for user email: "${user.email}"`);
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
@@ -36,12 +38,21 @@ exports.createCheckoutSession = async (req, res) => {
             success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/premium`,
             client_reference_id: userId.toString(),
-            customer_email: user.email,
+            customer_email: user.email ? user.email.trim() : undefined,
         });
 
         res.status(200).json({ id: session.id, url: session.url });
     } catch (error) {
         console.error("Stripe Session Error:", error);
+
+        // Handle Stripe specific email validation error
+        if (error.code === 'email_invalid') {
+            return res.status(400).json({
+                message: "Stripe rejected the email format. Please ensure your account email has a valid domain (e.g. .com, .org)",
+                error: error.message
+            });
+        }
+
         res.status(error.statusCode || 500).json({
             message: error.message || "Error creating payment session",
             error: error

@@ -54,7 +54,7 @@ exports.registerDonor = async (req, res) => {
         const {
             firstName, lastName, email, phone, dob, gender,
             bloodGroup, address, city, state, organs,
-            witnessName, witnessRelation, hospitalName, doctorInCharge
+            witnessName, witnessRelation, witnessPhone, hospitalName, doctorInCharge
         } = req.body;
 
         // Check if donor already exists
@@ -88,7 +88,7 @@ exports.registerDonor = async (req, res) => {
             bloodGroup, address, city, state,
             organs: parsedOrgans,
             photo,
-            witnessName, witnessRelation,
+            witnessName, witnessRelation, witnessPhone,
             witnessPhoto,
             hospitalName,
             doctorInCharge
